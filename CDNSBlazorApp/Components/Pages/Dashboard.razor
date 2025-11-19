@@ -44,6 +44,22 @@
             <p>Track and manage payments</p>
         </div>
 
+        <div class="dashboard-card" @onclick="@(() => NavigateTo("/series"))">
+            <div class="card-icon series-icon">
+                <span>📋</span>
+            </div>
+            <h3>Series</h3>
+            <p>View series information</p>
+        </div>
+
+        <div class="dashboard-card" @onclick="@(() => NavigateTo("/instituations"))">
+            <div class="card-icon instituation-icon">
+                <span>🏛️</span>
+            </div>
+            <h3>Instituations</h3>
+            <p>View and manage instituations</p>
+        </div>
+
         @if (AuthService.HasRole("Admin"))
         {
             <div class="dashboard-card" @onclick="@(() => NavigateTo("/user-management"))">
@@ -54,14 +70,6 @@
                 <p>Manage users and roles</p>
             </div>
         }
-
-        <div class="dashboard-card" @onclick="@(() => NavigateTo("/instituations"))">
-            <div class="card-icon instituation-icon">
-                <span>🏛️</span>
-            </div>
-            <h3>Instituations</h3>
-            <p>View and manage instituations</p>
-        </div>
     </div>
 </div>
 
@@ -135,6 +143,10 @@
 
     .payment-icon {
         background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+    }
+
+    .series-icon {
+        background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
     }
 
     .user-icon {

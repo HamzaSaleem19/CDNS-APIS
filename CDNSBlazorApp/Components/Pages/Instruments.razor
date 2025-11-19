@@ -1,0 +1,290 @@
+@page "/instruments"
+@using System.Net.Http.Json
+@inject AuthService AuthService
+@inject NavigationManager NavigationManager
+@inject HttpClient Http
+
+<PageTitle>Instruments - CDNS Blazor App</PageTitle>
+
+<div class="page-container">
+    <div class="page-header">
+        <h2>Financial Instruments</h2>
+        <p>View and manage financial instruments</p>
+    </div>
+
+    @if (!AuthService.IsAuthenticated)
+    {
+        NavigationManager.NavigateTo("/login");
+        return;
+    }
+
+    <div class="actions-bar">
+        <button class="btn btn-primary" @onclick="LoadData">
+            🔄 Refresh
+        </button>
+    </div>
+
+    @if (isLoading)
+    {
+        <div class="loading">Loading instruments...</div>
+    }
+    else if (errorMessage != null)
+    {
+        <div class="alert alert-danger">@errorMessage</div>
+    }
+    else if (instruments == null || !instruments.Any())
+    {
+        <div class="alert alert-info">No instruments found. Please upload data using Excel Upload.</div>
+    }
+    else
+    {
+        <div class="table-container">
+            <div class="table-scroll">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Instrument ID</th>
+                            <th>Name</th>
+                            <th>Long Name</th>
+                            <th>Original ID</th>
+                            <th>Status</th>
+                            <th>Sign Date</th>
+                            <th>Maturity Date</th>
+                            <th>Amount</th>
+                            <th>Currency</th>
+                            <th>Institution</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in instruments)
+                        {
+                            <tr>
+                                <td><span class="badge badge-primary">@item.InstrumentId</span></td>
+                                <td><strong>@item.Name</strong></td>
+                                <td>@item.LongName</td>
+                                <td>@item.OriginalInstId</td>
+                                <td>
+                                    <span class="@(item.CdLoStatus == "0" ? "status-active" : "status-inactive")">
+                                        @(item.CdLoStatus == "0" ? "Active" : "Inactive")
+                                    </span>
+                                </td>
+                                <td>@item.DSign?.ToString("yyyy-MM-dd")</td>
+                                <td>@item.DFinalMaturity?.ToString("yyyy-MM-dd")</td>
+                                <td class="text-right">@item.Amt.ToString("N2")</td>
+                                <td>@item.CuBase</td>
+                                <td>@item.InstituationId</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+            <div class="table-footer">
+                <p>Total Records: <strong>@instruments.Count</strong></p>
+            </div>
+        </div>
+    }
+
+    <div class="back-button">
+        <button class="btn-back" @onclick="@(() => NavigationManager.NavigateTo("/"))">
+            ← Back to Dashboard
+        </button>
+    </div>
+</div>
+
+<style>
+    .page-container {
+        padding: 30px;
+        max-width: 1400px;
+        margin: 0 auto;
+    }
+
+    .page-header {
+        text-align: center;
+        margin-bottom: 30px;
+    }
+
+    .page-header h2 {
+        color: #333;
+        font-size: 32px;
+        font-weight: 700;
+        margin-bottom: 10px;
+    }
+
+    .page-header p {
+        color: #666;
+        font-size: 16px;
+    }
+
+    .actions-bar {
+        margin-bottom: 20px;
+        display: flex;
+        justify-content: flex-end;
+    }
+
+    .btn-primary {
+        padding: 10px 20px;
+        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+
+    .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(240, 147, 251, 0.3);
+    }
+
+    .table-container {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+        margin-bottom: 20px;
+    }
+
+    .table-scroll {
+        overflow-x: auto;
+    }
+
+    .data-table {
+        width: 100%;
+        border-collapse: collapse;
+        min-width: 1200px;
+    }
+
+    .data-table thead {
+        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        color: white;
+    }
+
+    .data-table th {
+        padding: 15px;
+        text-align: left;
+        font-weight: 600;
+        font-size: 14px;
+        white-space: nowrap;
+    }
+
+    .data-table td {
+        padding: 12px 15px;
+        border-bottom: 1px solid #eee;
+        font-size: 14px;
+    }
+
+    .data-table tbody tr:hover {
+        background-color: #f8f9fa;
+    }
+
+    .text-right {
+        text-align: right;
+    }
+
+    .badge {
+        display: inline-block;
+        padding: 4px 12px;
+        border-radius: 12px;
+        font-size: 12px;
+        font-weight: 600;
+    }
+
+    .badge-primary {
+        background: #f093fb;
+        color: white;
+    }
+
+    .status-active {
+        color: #28a745;
+        font-weight: 600;
+    }
+
+    .status-inactive {
+        color: #dc3545;
+        font-weight: 600;
+    }
+
+    .table-footer {
+        padding: 15px;
+        background: #f8f9fa;
+        text-align: right;
+        border-top: 2px solid #dee2e6;
+    }
+
+    .loading {
+        text-align: center;
+        padding: 50px;
+        color: #666;
+        font-size: 18px;
+    }
+
+    .alert {
+        padding: 15px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+    }
+
+    .alert-danger {
+        background: #fee;
+        border: 1px solid #fcc;
+        color: #c33;
+    }
+
+    .alert-info {
+        background: #e7f3ff;
+        border: 1px solid #b3d9ff;
+        color: #004085;
+    }
+
+    .back-button {
+        text-align: center;
+        margin-top: 30px;
+    }
+
+    .btn-back {
+        padding: 12px 30px;
+        background: #6c757d;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+
+    .btn-back:hover {
+        background: #5a6268;
+        transform: translateY(-2px);
+    }
+</style>
+
+@code {
+    private List<Instrument>? instruments;
+    private bool isLoading = true;
+    private string? errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        isLoading = true;
+        errorMessage = null;
+
+        try
+        {
+            instruments = await Http.GetFromJsonAsync<List<Instrument>>("/api/instrument");
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error loading data: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+}

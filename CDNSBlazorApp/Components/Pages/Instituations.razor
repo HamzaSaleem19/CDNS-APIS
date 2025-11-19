@@ -1,0 +1,254 @@
+@page "/instituations"
+@using System.Net.Http.Json
+@inject AuthService AuthService
+@inject NavigationManager NavigationManager
+@inject HttpClient Http
+
+<PageTitle>Instituations - CDNS Blazor App</PageTitle>
+
+<div class="page-container">
+    <div class="page-header">
+        <h2>Instituations</h2>
+        <p>Manage institution information</p>
+    </div>
+
+    @if (!AuthService.IsAuthenticated)
+    {
+        NavigationManager.NavigateTo("/login");
+        return;
+    }
+
+    <div class="actions-bar">
+        <button class="btn btn-primary" @onclick="LoadData">
+            🔄 Refresh
+        </button>
+    </div>
+
+    @if (isLoading)
+    {
+        <div class="loading">Loading instituations...</div>
+    }
+    else if (errorMessage != null)
+    {
+        <div class="alert alert-danger">@errorMessage</div>
+    }
+    else if (instituations == null || !instituations.Any())
+    {
+        <div class="alert alert-info">No instituations found. Please upload data using Excel Upload.</div>
+    }
+    else
+    {
+        <div class="table-container">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Instituation ID</th>
+                        <th>Instituation Name</th>
+                        <th>Contact Email</th>
+                        <th>Created At</th>
+                        <th>Created Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in instituations)
+                    {
+                        <tr>
+                            <td><span class="badge badge-primary">@item.InstituationId</span></td>
+                            <td>@item.InstituationName</td>
+                            <td>@item.ContactEmail</td>
+                            <td>@item.CreatedAt.ToString("yyyy-MM-dd HH:mm")</td>
+                            <td>@item.CreatedAtValueDate.ToString("yyyy-MM-dd")</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+            <div class="table-footer">
+                <p>Total Records: <strong>@instituations.Count</strong></p>
+            </div>
+        </div>
+    }
+
+    <div class="back-button">
+        <button class="btn-back" @onclick="@(() => NavigationManager.NavigateTo("/"))">
+            ← Back to Dashboard
+        </button>
+    </div>
+</div>
+
+<style>
+    .page-container {
+        padding: 30px;
+        max-width: 1400px;
+        margin: 0 auto;
+    }
+
+    .page-header {
+        text-align: center;
+        margin-bottom: 30px;
+    }
+
+    .page-header h2 {
+        color: #333;
+        font-size: 32px;
+        font-weight: 700;
+        margin-bottom: 10px;
+    }
+
+    .page-header p {
+        color: #666;
+        font-size: 16px;
+    }
+
+    .actions-bar {
+        margin-bottom: 20px;
+        display: flex;
+        justify-content: flex-end;
+    }
+
+    .btn-primary {
+        padding: 10px 20px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+
+    .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+    }
+
+    .table-container {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+        margin-bottom: 20px;
+    }
+
+    .data-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .data-table thead {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+    }
+
+    .data-table th {
+        padding: 15px;
+        text-align: left;
+        font-weight: 600;
+        font-size: 14px;
+    }
+
+    .data-table td {
+        padding: 12px 15px;
+        border-bottom: 1px solid #eee;
+        font-size: 14px;
+    }
+
+    .data-table tbody tr:hover {
+        background-color: #f8f9fa;
+    }
+
+    .badge {
+        display: inline-block;
+        padding: 4px 12px;
+        border-radius: 12px;
+        font-size: 12px;
+        font-weight: 600;
+    }
+
+    .badge-primary {
+        background: #667eea;
+        color: white;
+    }
+
+    .table-footer {
+        padding: 15px;
+        background: #f8f9fa;
+        text-align: right;
+        border-top: 2px solid #dee2e6;
+    }
+
+    .loading {
+        text-align: center;
+        padding: 50px;
+        color: #666;
+        font-size: 18px;
+    }
+
+    .alert {
+        padding: 15px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+    }
+
+    .alert-danger {
+        background: #fee;
+        border: 1px solid #fcc;
+        color: #c33;
+    }
+
+    .alert-info {
+        background: #e7f3ff;
+        border: 1px solid #b3d9ff;
+        color: #004085;
+    }
+
+    .back-button {
+        text-align: center;
+        margin-top: 30px;
+    }
+
+    .btn-back {
+        padding: 12px 30px;
+        background: #6c757d;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+
+    .btn-back:hover {
+        background: #5a6268;
+        transform: translateY(-2px);
+    }
+</style>
+
+@code {
+    private List<Instituation>? instituations;
+    private bool isLoading = true;
+    private string? errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        isLoading = true;
+        errorMessage = null;
+
+        try
+        {
+            instituations = await Http.GetFromJsonAsync<List<Instituation>>("/api/instituation");
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error loading data: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+}

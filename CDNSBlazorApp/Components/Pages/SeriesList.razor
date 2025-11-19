@@ -1,0 +1,268 @@
+@page "/series"
+@using System.Net.Http.Json
+@inject AuthService AuthService
+@inject NavigationManager NavigationManager
+@inject HttpClient Http
+
+<PageTitle>Series - CDNS Blazor App</PageTitle>
+
+<div class="page-container">
+    <div class="page-header">
+        <h2>Series</h2>
+        <p>View series information</p>
+    </div>
+
+    @if (!AuthService.IsAuthenticated)
+    {
+        NavigationManager.NavigateTo("/login");
+        return;
+    }
+
+    <div class="actions-bar">
+        <button class="btn btn-primary" @onclick="LoadData">
+            🔄 Refresh
+        </button>
+    </div>
+
+    @if (isLoading)
+    {
+        <div class="loading">Loading series...</div>
+    }
+    else if (errorMessage != null)
+    {
+        <div class="alert alert-danger">@errorMessage</div>
+    }
+    else if (series == null || !series.Any())
+    {
+        <div class="alert alert-info">No series found. Please upload data using Excel Upload.</div>
+    }
+    else
+    {
+        <div class="table-container">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Serie ID</th>
+                        <th>Tra No</th>
+                        <th>Serie Amount</th>
+                        <th>Currency</th>
+                        <th>Reorg Group</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in series)
+                    {
+                        <tr>
+                            <td><span class="badge badge-primary">@item.SerieId</span></td>
+                            <td>@item.SerieTraNo</td>
+                            <td class="text-right amount">@item.SerieAmt.ToString("N2")</td>
+                            <td>@item.SerieCurrency</td>
+                            <td>@item.CdReorgGrp</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+            <div class="table-footer">
+                <p>Total Records: <strong>@series.Count</strong></p>
+                <p>Total Amount: <strong>@series.Sum(s => s.SerieAmt).ToString("N2")</strong></p>
+            </div>
+        </div>
+    }
+
+    <div class="back-button">
+        <button class="btn-back" @onclick="@(() => NavigationManager.NavigateTo("/"))">
+            ← Back to Dashboard
+        </button>
+    </div>
+</div>
+
+<style>
+    .page-container {
+        padding: 30px;
+        max-width: 1400px;
+        margin: 0 auto;
+    }
+
+    .page-header {
+        text-align: center;
+        margin-bottom: 30px;
+    }
+
+    .page-header h2 {
+        color: #333;
+        font-size: 32px;
+        font-weight: 700;
+        margin-bottom: 10px;
+    }
+
+    .page-header p {
+        color: #666;
+        font-size: 16px;
+    }
+
+    .actions-bar {
+        margin-bottom: 20px;
+        display: flex;
+        justify-content: flex-end;
+    }
+
+    .btn-primary {
+        padding: 10px 20px;
+        background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+
+    .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(250, 112, 154, 0.3);
+    }
+
+    .table-container {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+        margin-bottom: 20px;
+    }
+
+    .data-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .data-table thead {
+        background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+        color: white;
+    }
+
+    .data-table th {
+        padding: 15px;
+        text-align: left;
+        font-weight: 600;
+        font-size: 14px;
+    }
+
+    .data-table td {
+        padding: 12px 15px;
+        border-bottom: 1px solid #eee;
+        font-size: 14px;
+    }
+
+    .data-table tbody tr:hover {
+        background-color: #f8f9fa;
+    }
+
+    .text-right {
+        text-align: right;
+    }
+
+    .amount {
+        font-weight: 600;
+        color: #28a745;
+    }
+
+    .badge {
+        display: inline-block;
+        padding: 4px 12px;
+        border-radius: 12px;
+        font-size: 12px;
+        font-weight: 600;
+    }
+
+    .badge-primary {
+        background: #fa709a;
+        color: white;
+    }
+
+    .table-footer {
+        padding: 15px;
+        background: #f8f9fa;
+        text-align: right;
+        border-top: 2px solid #dee2e6;
+    }
+
+    .table-footer p {
+        margin: 5px 0;
+    }
+
+    .loading {
+        text-align: center;
+        padding: 50px;
+        color: #666;
+        font-size: 18px;
+    }
+
+    .alert {
+        padding: 15px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+    }
+
+    .alert-danger {
+        background: #fee;
+        border: 1px solid #fcc;
+        color: #c33;
+    }
+
+    .alert-info {
+        background: #e7f3ff;
+        border: 1px solid #b3d9ff;
+        color: #004085;
+    }
+
+    .back-button {
+        text-align: center;
+        margin-top: 30px;
+    }
+
+    .btn-back {
+        padding: 12px 30px;
+        background: #6c757d;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+
+    .btn-back:hover {
+        background: #5a6268;
+        transform: translateY(-2px);
+    }
+</style>
+
+@code {
+    private List<Series>? series;
+    private bool isLoading = true;
+    private string? errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        isLoading = true;
+        errorMessage = null;
+
+        try
+        {
+            series = await Http.GetFromJsonAsync<List<Series>>("/api/series");
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error loading data: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+}
