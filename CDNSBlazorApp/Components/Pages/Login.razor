@@ -1,0 +1,211 @@
+@page "/login"
+@using CDNSBlazorApp.Services
+@inject AuthService AuthService
+@inject NavigationManager NavigationManager
+
+<PageTitle>Login - CDNS Blazor App</PageTitle>
+
+<div class="login-container">
+    <div class="login-card">
+        <div class="login-header">
+            <h2>CDNS Blazor Application</h2>
+            <p>Central Directory of National Saving</p>
+        </div>
+
+        <EditForm Model="@loginModel" OnValidSubmit="HandleLogin">
+            <DataAnnotationsValidator />
+
+            @if (!string.IsNullOrEmpty(errorMessage))
+            {
+                <div class="alert alert-danger">
+                    @errorMessage
+                </div>
+            }
+
+            <div class="form-group">
+                <label for="username">Username</label>
+                <InputText id="username" @bind-Value="loginModel.Username" class="form-control" placeholder="Enter username" />
+                <ValidationMessage For="@(() => loginModel.Username)" />
+            </div>
+
+            <div class="form-group">
+                <label for="password">Password</label>
+                <InputText id="password" type="password" @bind-Value="loginModel.Password" class="form-control" placeholder="Enter password" />
+                <ValidationMessage For="@(() => loginModel.Password)" />
+            </div>
+
+            <div class="form-group">
+                <button type="submit" class="btn btn-primary btn-block" disabled="@isLoading">
+                    @if (isLoading)
+                    {
+                        <span class="spinner-border spinner-border-sm me-2"></span>
+                    }
+                    Login
+                </button>
+            </div>
+        </EditForm>
+
+        <div class="login-footer">
+            <p class="text-muted">Default credentials: <strong>Admin</strong> / <strong>Admin</strong></p>
+        </div>
+    </div>
+</div>
+
+<style>
+    .login-container {
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        padding: 20px;
+    }
+
+    .login-card {
+        background: white;
+        border-radius: 10px;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+        padding: 40px;
+        width: 100%;
+        max-width: 450px;
+    }
+
+    .login-header {
+        text-align: center;
+        margin-bottom: 30px;
+    }
+
+    .login-header h2 {
+        color: #333;
+        font-weight: 600;
+        margin-bottom: 5px;
+    }
+
+    .login-header p {
+        color: #666;
+        font-size: 14px;
+    }
+
+    .form-group {
+        margin-bottom: 20px;
+    }
+
+    .form-group label {
+        display: block;
+        margin-bottom: 5px;
+        color: #333;
+        font-weight: 500;
+    }
+
+    .form-control {
+        width: 100%;
+        padding: 12px;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        font-size: 14px;
+        transition: border-color 0.3s;
+    }
+
+    .form-control:focus {
+        outline: none;
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    .btn-primary {
+        width: 100%;
+        padding: 12px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border: none;
+        border-radius: 5px;
+        color: white;
+        font-weight: 600;
+        font-size: 16px;
+        cursor: pointer;
+        transition: transform 0.2s;
+    }
+
+    .btn-primary:hover:not(:disabled) {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+    }
+
+    .btn-primary:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+    }
+
+    .login-footer {
+        margin-top: 20px;
+        text-align: center;
+    }
+
+    .alert {
+        padding: 12px;
+        border-radius: 5px;
+        margin-bottom: 20px;
+    }
+
+    .alert-danger {
+        background-color: #fee;
+        border: 1px solid #fcc;
+        color: #c33;
+    }
+
+    .validation-message {
+        color: #dc3545;
+        font-size: 12px;
+        margin-top: 5px;
+    }
+</style>
+
+@code {
+    private LoginModel loginModel = new();
+    private string? errorMessage;
+    private bool isLoading;
+
+    protected override void OnInitialized()
+    {
+        if (AuthService.IsAuthenticated)
+        {
+            NavigationManager.NavigateTo("/");
+        }
+    }
+
+    private async Task HandleLogin()
+    {
+        errorMessage = null;
+        isLoading = true;
+
+        try
+        {
+            var success = await AuthService.LoginAsync(loginModel.Username, loginModel.Password);
+
+            if (success)
+            {
+                NavigationManager.NavigateTo("/");
+            }
+            else
+            {
+                errorMessage = "Invalid username or password";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = "An error occurred during login. Please try again.";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    public class LoginModel
+    {
+        [System.ComponentModel.DataAnnotations.Required(ErrorMessage = "Username is required")]
+        public string Username { get; set; } = string.Empty;
+
+        [System.ComponentModel.DataAnnotations.Required(ErrorMessage = "Password is required")]
+        public string Password { get; set; } = string.Empty;
+    }
+}

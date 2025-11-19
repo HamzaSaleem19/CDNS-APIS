@@ -1,0 +1,175 @@
+@page "/"
+@using CDNSBlazorApp.Services
+@inject AuthService AuthService
+@inject NavigationManager NavigationManager
+
+<PageTitle>Dashboard - CDNS Blazor App</PageTitle>
+
+<div class="dashboard-container">
+    <div class="dashboard-header">
+        <h1>Welcome to CDNS Dashboard</h1>
+        <p>Manage your financial instruments and data</p>
+    </div>
+
+    <div class="dashboard-grid">
+        <div class="dashboard-card" @onclick="@(() => NavigateTo("/excel-upload"))">
+            <div class="card-icon upload-icon">
+                <span>📊</span>
+            </div>
+            <h3>Excel Upload</h3>
+            <p>Upload data from Excel files for all tables</p>
+        </div>
+
+        <div class="dashboard-card" @onclick="@(() => NavigateTo("/instruments"))">
+            <div class="card-icon instrument-icon">
+                <span>📈</span>
+            </div>
+            <h3>Instruments</h3>
+            <p>View and manage financial instruments</p>
+        </div>
+
+        <div class="dashboard-card" @onclick="@(() => NavigateTo("/subscriptions"))">
+            <div class="card-icon subscription-icon">
+                <span>💰</span>
+            </div>
+            <h3>Subscriptions</h3>
+            <p>Manage subscription transactions</p>
+        </div>
+
+        <div class="dashboard-card" @onclick="@(() => NavigateTo("/payments"))">
+            <div class="card-icon payment-icon">
+                <span>💳</span>
+            </div>
+            <h3>Payments</h3>
+            <p>Track and manage payments</p>
+        </div>
+
+        @if (AuthService.HasRole("Admin"))
+        {
+            <div class="dashboard-card" @onclick="@(() => NavigateTo("/user-management"))">
+                <div class="card-icon user-icon">
+                    <span>👥</span>
+                </div>
+                <h3>User Management</h3>
+                <p>Manage users and roles</p>
+            </div>
+        }
+
+        <div class="dashboard-card" @onclick="@(() => NavigateTo("/instituations"))">
+            <div class="card-icon instituation-icon">
+                <span>🏛️</span>
+            </div>
+            <h3>Instituations</h3>
+            <p>View and manage instituations</p>
+        </div>
+    </div>
+</div>
+
+<style>
+    .dashboard-container {
+        padding: 30px;
+        max-width: 1400px;
+        margin: 0 auto;
+    }
+
+    .dashboard-header {
+        text-align: center;
+        margin-bottom: 50px;
+    }
+
+    .dashboard-header h1 {
+        color: #333;
+        font-size: 36px;
+        font-weight: 700;
+        margin-bottom: 10px;
+    }
+
+    .dashboard-header p {
+        color: #666;
+        font-size: 18px;
+    }
+
+    .dashboard-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 25px;
+    }
+
+    .dashboard-card {
+        background: white;
+        border-radius: 12px;
+        padding: 30px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-align: center;
+    }
+
+    .dashboard-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+    }
+
+    .card-icon {
+        width: 70px;
+        height: 70px;
+        margin: 0 auto 20px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 32px;
+    }
+
+    .upload-icon {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+
+    .instrument-icon {
+        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    }
+
+    .subscription-icon {
+        background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+    }
+
+    .payment-icon {
+        background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+    }
+
+    .user-icon {
+        background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+    }
+
+    .instituation-icon {
+        background: linear-gradient(135deg, #30cfd0 0%, #330867 100%);
+    }
+
+    .dashboard-card h3 {
+        color: #333;
+        font-size: 20px;
+        font-weight: 600;
+        margin-bottom: 10px;
+    }
+
+    .dashboard-card p {
+        color: #666;
+        font-size: 14px;
+        line-height: 1.6;
+    }
+</style>
+
+@code {
+    protected override void OnInitialized()
+    {
+        if (!AuthService.IsAuthenticated)
+        {
+            NavigationManager.NavigateTo("/login");
+        }
+    }
+
+    private void NavigateTo(string path)
+    {
+        NavigationManager.NavigateTo(path);
+    }
+}
