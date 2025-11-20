@@ -14,7 +14,9 @@
 
     @if (!AuthService.IsAuthenticated)
     {
-        NavigationManager.NavigateTo("/login");
+        <div class="alert alert-warning">
+            <p>Please <a href="/login">login</a> to access this page.</p>
+        </div>
         return;
     }
 
