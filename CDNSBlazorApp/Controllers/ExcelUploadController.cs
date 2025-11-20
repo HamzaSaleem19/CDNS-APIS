@@ -108,7 +108,14 @@ namespace CDNSBlazorApp.Controllers
         {
             try
             {
-                var instituationId = worksheet.Cells[row, 1].Value?.ToString() ?? "CDNS";
+                // Skip empty rows - check if the ID column has a value
+                var idValue = worksheet.Cells[row, 1].Value?.ToString();
+                if (string.IsNullOrWhiteSpace(idValue))
+                {
+                    return (true, null); // Skip this row silently
+                }
+
+                var instituationId = idValue;
 
                 // Check if instituation already exists
                 var existingInstituation = await _context.Instituations.FindAsync(instituationId);
@@ -150,7 +157,14 @@ namespace CDNSBlazorApp.Controllers
         {
             try
             {
-                var instrumentId = worksheet.Cells[row, 1].Value?.ToString() ?? "";
+                // Skip empty rows
+                var idValue = worksheet.Cells[row, 1].Value?.ToString();
+                if (string.IsNullOrWhiteSpace(idValue))
+                {
+                    return (true, null);
+                }
+
+                var instrumentId = idValue;
 
                 // Check if instrument already exists
                 var existingInstrument = await _context.Instruments.FindAsync(instrumentId);
@@ -232,7 +246,14 @@ namespace CDNSBlazorApp.Controllers
         {
             try
             {
-                var serieId = worksheet.Cells[row, 1].Value?.ToString() ?? "";
+                // Skip empty rows
+                var idValue = worksheet.Cells[row, 1].Value?.ToString();
+                if (string.IsNullOrWhiteSpace(idValue))
+                {
+                    return (true, null);
+                }
+
+                var serieId = idValue;
                 var serieTraNo = int.TryParse(worksheet.Cells[row, 2].Value?.ToString(), out var traNo) ? traNo : 1;
 
                 // Check if series already exists
@@ -274,7 +295,14 @@ namespace CDNSBlazorApp.Controllers
         {
             try
             {
-                var seriePatId = worksheet.Cells[row, 1].Value?.ToString() ?? "";
+                // Skip empty rows
+                var idValue = worksheet.Cells[row, 1].Value?.ToString();
+                if (string.IsNullOrWhiteSpace(idValue))
+                {
+                    return (true, null);
+                }
+
+                var seriePatId = idValue;
                 var seriePatTraNo = int.TryParse(worksheet.Cells[row, 2].Value?.ToString(), out var traNo) ? traNo : 1;
 
                 // Check if series pattern already exists
@@ -324,7 +352,14 @@ namespace CDNSBlazorApp.Controllers
         {
             try
             {
-                var subscriptionId = worksheet.Cells[row, 1].Value?.ToString() ?? "";
+                // Skip empty rows
+                var idValue = worksheet.Cells[row, 1].Value?.ToString();
+                if (string.IsNullOrWhiteSpace(idValue))
+                {
+                    return (true, null);
+                }
+
+                var subscriptionId = idValue;
                 var subscriptionIdTraNo = int.TryParse(worksheet.Cells[row, 2].Value?.ToString(), out var traNo) ? traNo : 1;
 
                 // Check if subscription already exists
@@ -374,7 +409,14 @@ namespace CDNSBlazorApp.Controllers
         {
             try
             {
-                var paymentId = worksheet.Cells[row, 1].Value?.ToString() ?? "";
+                // Skip empty rows
+                var idValue = worksheet.Cells[row, 1].Value?.ToString();
+                if (string.IsNullOrWhiteSpace(idValue))
+                {
+                    return (true, null);
+                }
+
+                var paymentId = idValue;
                 var paymentTraNo = int.TryParse(worksheet.Cells[row, 2].Value?.ToString(), out var traNo) ? traNo : 1;
 
                 // Check if payment already exists
