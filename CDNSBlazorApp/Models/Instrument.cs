@@ -8,7 +8,7 @@ namespace CDNSBlazorApp.Models
     {
         [Key]
         [Column("INSTRUMENT_ID")]
-        [StringLength(15)]
+        [StringLength(50)]
         public string InstrumentId { get; set; } = string.Empty;
 
         [Column("NAME")]

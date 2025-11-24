@@ -8,7 +8,7 @@ namespace CDNSBlazorApp.Models
     {
         [Key]
         [Column(Order = 0)]
-        [StringLength(15)]
+        [StringLength(50)]
         public string SerieId { get; set; } = string.Empty;
 
         [Key]

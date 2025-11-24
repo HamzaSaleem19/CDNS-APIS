@@ -8,7 +8,7 @@ namespace CDNSBlazorApp.Models
     {
         [Key]
         [Column(Order = 0)]
-        [StringLength(15)]
+        [StringLength(50)]
         public string PaymentId { get; set; } = string.Empty;
 
         [Key]
