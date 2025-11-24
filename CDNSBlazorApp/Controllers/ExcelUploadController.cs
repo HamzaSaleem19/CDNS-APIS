@@ -84,16 +84,31 @@ namespace CDNSBlazorApp.Controllers
                     var (success, error) = await processRow(worksheet, row);
                     if (success)
                     {
-                        // Save changes after each row to prevent tracking and concurrency issues
-                        try
+                        // Only try to save if there are pending changes
+                        if (_context.ChangeTracker.HasChanges())
                         {
-                            await _context.SaveChangesAsync();
-                            successCount++;
+                            // Save changes after each row to prevent tracking and concurrency issues
+                            try
+                            {
+                                var affectedRows = await _context.SaveChangesAsync();
+
+                                // Check if data was actually saved
+                                if (affectedRows > 0)
+                                {
+                                    successCount++;
+                                }
+                                else
+                                {
+                                    // Data passed validation but wasn't saved (wrong format/columns)
+                                    errors.Add($"Row {row}: No data was saved. Please check Excel column format matches the expected template.");
+                                }
+                            }
+                            catch (Exception ex)
+                            {
+                                errors.Add($"Row {row}: Failed to save - {ex.Message}");
+                            }
                         }
-                        catch (Exception ex)
-                        {
-                            errors.Add($"Row {row}: Failed to save - {ex.Message}");
-                        }
+                        // else: Empty row, skip silently (no changes tracked)
                     }
                     else if (error != null)
                         errors.Add($"Row {row}: {error}");
