@@ -209,7 +209,7 @@ namespace CDNSBlazorApp.Controllers
                 var instituationExists = await _context.Instituations.AnyAsync(i => i.InstituationId == instituationId);
                 if (!instituationExists)
                 {
-                    return (false, $"Instituation '{instituationId}' does not exist (Column 24). Please upload Instituations first.");
+                    return (false, $"Cannot insert: Instituation ID '{instituationId}' not found in database (Column 24). Please upload this Instituation first before uploading Instrument data.");
                 }
 
                 var instrumentId = idValue;
@@ -313,7 +313,7 @@ namespace CDNSBlazorApp.Controllers
                 var instrumentExists = await _context.Instruments.AnyAsync(i => i.InstrumentId == serieId);
                 if (!instrumentExists)
                 {
-                    return (false, $"Instrument '{serieId}' does not exist (Column 1). Please upload Instruments first.");
+                    return (false, $"Cannot insert: Instrument ID '{serieId}' not found in database. Please upload this Instrument first before uploading Series data.");
                 }
 
                 // Check if series already exists
@@ -374,7 +374,7 @@ namespace CDNSBlazorApp.Controllers
                 var instrumentExists = await _context.Instruments.AnyAsync(i => i.InstrumentId == seriePatId);
                 if (!instrumentExists)
                 {
-                    return (false, $"Instrument '{seriePatId}' does not exist (Column 1). Please upload Instruments first.");
+                    return (false, $"Cannot insert: Instrument ID '{seriePatId}' not found in database. Please upload this Instrument first before uploading SeriesPattern data.");
                 }
 
                 // Check if series pattern already exists
@@ -443,7 +443,7 @@ namespace CDNSBlazorApp.Controllers
                 var instrumentExists = await _context.Instruments.AnyAsync(i => i.InstrumentId == subscriptionId);
                 if (!instrumentExists)
                 {
-                    return (false, $"Instrument '{subscriptionId}' does not exist (Column 1). Please upload Instruments first.");
+                    return (false, $"Cannot insert: Instrument ID '{subscriptionId}' not found in database. Please upload this Instrument first before uploading Subscription data.");
                 }
 
                 // Check if subscription already exists
@@ -512,7 +512,7 @@ namespace CDNSBlazorApp.Controllers
                 var instrumentExists = await _context.Instruments.AnyAsync(i => i.InstrumentId == paymentId);
                 if (!instrumentExists)
                 {
-                    return (false, $"Instrument '{paymentId}' does not exist (Column 1). Please upload Instruments first.");
+                    return (false, $"Cannot insert: Instrument ID '{paymentId}' not found in database. Please upload this Instrument first before uploading Payment data.");
                 }
 
                 // Check if payment already exists
