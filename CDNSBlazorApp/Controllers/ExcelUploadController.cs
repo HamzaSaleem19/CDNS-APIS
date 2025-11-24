@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using OfficeOpenXml;
 using CDNSBlazorApp.Data;
 using CDNSBlazorApp.Models;
@@ -124,6 +125,13 @@ namespace CDNSBlazorApp.Controllers
                     return (true, null); // Skip this row silently
                 }
 
+                // Validate required fields
+                var instituationName = worksheet.Cells[row, 2].Value?.ToString();
+                if (string.IsNullOrWhiteSpace(instituationName))
+                {
+                    return (false, "Instituation Name is required (Column 2)");
+                }
+
                 var instituationId = idValue;
 
                 // Check if instituation already exists
@@ -132,7 +140,7 @@ namespace CDNSBlazorApp.Controllers
                 if (existingInstituation != null)
                 {
                     // Update existing record
-                    existingInstituation.InstituationName = worksheet.Cells[row, 2].Value?.ToString() ?? "";
+                    existingInstituation.InstituationName = instituationName;
                     existingInstituation.ContactEmail = worksheet.Cells[row, 3].Value?.ToString();
                     existingInstituation.CreatedAt = DateTime.TryParse(worksheet.Cells[row, 4].Value?.ToString(), out var createdAt) ? createdAt : existingInstituation.CreatedAt;
                     existingInstituation.CreatedAtValueDate = DateTime.TryParse(worksheet.Cells[row, 5].Value?.ToString(), out var createdDate) ? createdDate : existingInstituation.CreatedAtValueDate;
@@ -145,7 +153,7 @@ namespace CDNSBlazorApp.Controllers
                     var instituation = new Instituation
                     {
                         InstituationId = instituationId,
-                        InstituationName = worksheet.Cells[row, 2].Value?.ToString() ?? "",
+                        InstituationName = instituationName,
                         ContactEmail = worksheet.Cells[row, 3].Value?.ToString(),
                         CreatedAt = DateTime.TryParse(worksheet.Cells[row, 4].Value?.ToString(), out var createdAt) ? createdAt : DateTime.Now,
                         CreatedAtValueDate = DateTime.TryParse(worksheet.Cells[row, 5].Value?.ToString(), out var createdDate) ? createdDate : DateTime.Now.Date
@@ -171,6 +179,22 @@ namespace CDNSBlazorApp.Controllers
                 if (string.IsNullOrWhiteSpace(idValue))
                 {
                     return (true, null);
+                }
+
+                // Validate required fields
+                var instrumentName = worksheet.Cells[row, 2].Value?.ToString();
+                if (string.IsNullOrWhiteSpace(instrumentName))
+                {
+                    return (false, "Instrument Name is required (Column 2)");
+                }
+
+                var instituationId = worksheet.Cells[row, 24].Value?.ToString() ?? "CDNS";
+
+                // Validate foreign key - check if Instituation exists
+                var instituationExists = await _context.Instituations.AnyAsync(i => i.InstituationId == instituationId);
+                if (!instituationExists)
+                {
+                    return (false, $"Instituation '{instituationId}' does not exist (Column 24). Please upload Instituations first.");
                 }
 
                 var instrumentId = idValue;
@@ -263,7 +287,19 @@ namespace CDNSBlazorApp.Controllers
                 }
 
                 var serieId = idValue;
-                var serieTraNo = int.TryParse(worksheet.Cells[row, 2].Value?.ToString(), out var traNo) ? traNo : 1;
+
+                // Validate TraNo is a valid integer
+                if (!int.TryParse(worksheet.Cells[row, 2].Value?.ToString(), out var serieTraNo))
+                {
+                    return (false, "TraNo must be a valid integer (Column 2)");
+                }
+
+                // Validate foreign key - check if Instrument exists
+                var instrumentExists = await _context.Instruments.AnyAsync(i => i.InstrumentId == serieId);
+                if (!instrumentExists)
+                {
+                    return (false, $"Instrument '{serieId}' does not exist (Column 1). Please upload Instruments first.");
+                }
 
                 // Check if series already exists
                 var existingSeries = await _context.Series.FindAsync(serieId, serieTraNo);
@@ -312,7 +348,19 @@ namespace CDNSBlazorApp.Controllers
                 }
 
                 var seriePatId = idValue;
-                var seriePatTraNo = int.TryParse(worksheet.Cells[row, 2].Value?.ToString(), out var traNo) ? traNo : 1;
+
+                // Validate TraNo is a valid integer
+                if (!int.TryParse(worksheet.Cells[row, 2].Value?.ToString(), out var seriePatTraNo))
+                {
+                    return (false, "TraNo must be a valid integer (Column 2)");
+                }
+
+                // Validate foreign key - check if Instrument exists
+                var instrumentExists = await _context.Instruments.AnyAsync(i => i.InstrumentId == seriePatId);
+                if (!instrumentExists)
+                {
+                    return (false, $"Instrument '{seriePatId}' does not exist (Column 1). Please upload Instruments first.");
+                }
 
                 // Check if series pattern already exists
                 var existingPattern = await _context.SeriesPatterns.FindAsync(seriePatId, seriePatTraNo);
@@ -369,7 +417,19 @@ namespace CDNSBlazorApp.Controllers
                 }
 
                 var subscriptionId = idValue;
-                var subscriptionIdTraNo = int.TryParse(worksheet.Cells[row, 2].Value?.ToString(), out var traNo) ? traNo : 1;
+
+                // Validate TraNo is a valid integer
+                if (!int.TryParse(worksheet.Cells[row, 2].Value?.ToString(), out var subscriptionIdTraNo))
+                {
+                    return (false, "TraNo must be a valid integer (Column 2)");
+                }
+
+                // Validate foreign key - check if Instrument exists
+                var instrumentExists = await _context.Instruments.AnyAsync(i => i.InstrumentId == subscriptionId);
+                if (!instrumentExists)
+                {
+                    return (false, $"Instrument '{subscriptionId}' does not exist (Column 1). Please upload Instruments first.");
+                }
 
                 // Check if subscription already exists
                 var existingSubscription = await _context.Subscriptions.FindAsync(subscriptionId, subscriptionIdTraNo);
@@ -426,7 +486,19 @@ namespace CDNSBlazorApp.Controllers
                 }
 
                 var paymentId = idValue;
-                var paymentTraNo = int.TryParse(worksheet.Cells[row, 2].Value?.ToString(), out var traNo) ? traNo : 1;
+
+                // Validate TraNo is a valid integer
+                if (!int.TryParse(worksheet.Cells[row, 2].Value?.ToString(), out var paymentTraNo))
+                {
+                    return (false, "TraNo must be a valid integer (Column 2)");
+                }
+
+                // Validate foreign key - check if Instrument exists
+                var instrumentExists = await _context.Instruments.AnyAsync(i => i.InstrumentId == paymentId);
+                if (!instrumentExists)
+                {
+                    return (false, $"Instrument '{paymentId}' does not exist (Column 1). Please upload Instruments first.");
+                }
 
                 // Check if payment already exists
                 var existingPayment = await _context.Payments.FindAsync(paymentId, paymentTraNo);
