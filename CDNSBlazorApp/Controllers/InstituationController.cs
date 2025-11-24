@@ -22,7 +22,7 @@ namespace CDNSBlazorApp.Controllers
         public async Task<ActionResult<IEnumerable<Instituation>>> GetInstituations()
         {
             return await _context.Instituations
-                .Include(i => i.Instruments)
+                //.Include(i => i.Instruments)
                 .ToListAsync();
         }
 
