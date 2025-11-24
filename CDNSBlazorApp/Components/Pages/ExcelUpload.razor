@@ -267,19 +267,52 @@
                 var result = await response.Content.ReadFromJsonAsync<UploadResponse>();
                 if (result != null)
                 {
-                    var statusMsg = $"✓ Successfully uploaded {result.SuccessCount} of {result.TotalRows} records";
+                    string statusMsg;
 
-                    if (result.ErrorCount > 0)
+                    // If no records uploaded, show error message
+                    if (result.SuccessCount == 0 && result.TotalRows > 0)
                     {
-                        statusMsg += $"\n⚠️ {result.ErrorCount} errors occurred:";
-                        foreach (var error in result.Errors.Take(5)) // Show first 5 errors
+                        statusMsg = $"✗ Failed to upload any records ({result.TotalRows} rows processed)";
+
+                        if (result.ErrorCount > 0)
                         {
-                            statusMsg += $"\n• {error}";
+                            statusMsg += $"\n\n{result.ErrorCount} errors found:";
+                            foreach (var error in result.Errors.Take(10)) // Show first 10 errors for troubleshooting
+                            {
+                                statusMsg += $"\n• {error}";
+                            }
+                            if (result.Errors.Count > 10)
+                            {
+                                statusMsg += $"\n... and {result.Errors.Count - 10} more errors";
+                            }
                         }
-                        if (result.Errors.Count > 5)
+                        else
                         {
-                            statusMsg += $"\n... and {result.Errors.Count - 5} more errors";
+                            statusMsg += "\n\nPossible reasons:\n• Wrong Excel file format or column order\n• Missing required data in columns\n• File may be for a different table";
                         }
+                    }
+                    // Partial success
+                    else if (result.SuccessCount < result.TotalRows && result.SuccessCount > 0)
+                    {
+                        statusMsg = $"⚠️ Partial upload: {result.SuccessCount} of {result.TotalRows} records uploaded";
+
+                        if (result.ErrorCount > 0)
+                        {
+                            statusMsg += $"\n\n{result.ErrorCount} errors occurred:";
+                            foreach (var error in result.Errors.Take(5))
+                            {
+                                statusMsg += $"\n• {error}";
+                            }
+                            if (result.Errors.Count > 5)
+                            {
+                                statusMsg += $"\n... and {result.Errors.Count - 5} more errors";
+                            }
+                        }
+                    }
+                    // Full success
+                    else
+                    {
+                        statusMsg = $"✓ Successfully uploaded {result.SuccessCount} of {result.TotalRows} records";
                     }
 
                     uploadStatus[entityType] = statusMsg;
@@ -324,8 +357,30 @@
 
     private string GetStatusClass(string status)
     {
-        if (status.Contains("successful") || status.Contains("Successfully")) return "status-message status-success";
-        if (status.Contains("failed") || status.Contains("Error") || status.Contains("✗")) return "status-message status-error";
+        // Error conditions (red)
+        if (status.Contains("✗") ||
+            status.Contains("Failed") ||
+            status.Contains("failed") ||
+            status.Contains("Error"))
+        {
+            return "status-message status-error";
+        }
+
+        // Warning conditions (yellow/orange for partial success)
+        if (status.Contains("⚠️") || status.Contains("Partial"))
+        {
+            return "status-message status-error"; // Use error styling for visibility
+        }
+
+        // Success conditions (green)
+        if (status.Contains("✓") ||
+            status.Contains("successful") ||
+            status.Contains("Successfully"))
+        {
+            return "status-message status-success";
+        }
+
+        // Default loading
         return "status-message status-loading";
     }
 
