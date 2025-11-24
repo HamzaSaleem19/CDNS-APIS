@@ -186,27 +186,32 @@
 
     .status-message {
         margin-top: 15px;
-        padding: 10px;
-        border-radius: 5px;
-        font-size: 14px;
+        padding: 15px;
+        border-radius: 8px;
+        font-size: 13px;
+        white-space: pre-line;
+        text-align: left;
+        max-height: 300px;
+        overflow-y: auto;
+        line-height: 1.6;
     }
 
     .status-success {
         background-color: #d4edda;
         color: #155724;
-        border: 1px solid #c3e6cb;
+        border: 2px solid #c3e6cb;
     }
 
     .status-error {
         background-color: #f8d7da;
         color: #721c24;
-        border: 1px solid #f5c6cb;
+        border: 2px solid #f5c6cb;
     }
 
     .status-loading {
         background-color: #d1ecf1;
         color: #0c5460;
-        border: 1px solid #bee5eb;
+        border: 2px solid #bee5eb;
     }
 
     .back-button {
@@ -259,12 +264,54 @@
 
             if (response.IsSuccessStatusCode)
             {
-                var result = await response.Content.ReadAsStringAsync();
-                uploadStatus[entityType] = $"✓ Upload successful!";
+                var result = await response.Content.ReadFromJsonAsync<UploadResponse>();
+                if (result != null)
+                {
+                    var statusMsg = $"✓ Successfully uploaded {result.SuccessCount} of {result.TotalRows} records";
+
+                    if (result.ErrorCount > 0)
+                    {
+                        statusMsg += $"\n⚠️ {result.ErrorCount} errors occurred:";
+                        foreach (var error in result.Errors.Take(5)) // Show first 5 errors
+                        {
+                            statusMsg += $"\n• {error}";
+                        }
+                        if (result.Errors.Count > 5)
+                        {
+                            statusMsg += $"\n... and {result.Errors.Count - 5} more errors";
+                        }
+                    }
+
+                    uploadStatus[entityType] = statusMsg;
+                }
+                else
+                {
+                    uploadStatus[entityType] = "✓ Upload successful!";
+                }
             }
             else
             {
-                uploadStatus[entityType] = $"✗ Upload failed: {response.StatusCode}";
+                var errorContent = await response.Content.ReadAsStringAsync();
+                try
+                {
+                    var errorResult = await response.Content.ReadFromJsonAsync<ErrorResponse>();
+                    if (errorResult != null && !string.IsNullOrEmpty(errorResult.Message))
+                    {
+                        uploadStatus[entityType] = $"✗ Upload failed: {errorResult.Message}";
+                        if (!string.IsNullOrEmpty(errorResult.Error))
+                        {
+                            uploadStatus[entityType] += $"\nDetails: {errorResult.Error}";
+                        }
+                    }
+                    else
+                    {
+                        uploadStatus[entityType] = $"✗ Upload failed: {response.StatusCode}\n{errorContent}";
+                    }
+                }
+                catch
+                {
+                    uploadStatus[entityType] = $"✗ Upload failed: {response.StatusCode}\n{errorContent}";
+                }
             }
         }
         catch (Exception ex)
@@ -277,8 +324,24 @@
 
     private string GetStatusClass(string status)
     {
-        if (status.Contains("successful")) return "status-message status-success";
-        if (status.Contains("failed") || status.Contains("Error")) return "status-message status-error";
+        if (status.Contains("successful") || status.Contains("Successfully")) return "status-message status-success";
+        if (status.Contains("failed") || status.Contains("Error") || status.Contains("✗")) return "status-message status-error";
         return "status-message status-loading";
+    }
+
+    // Response classes for deserializing API responses
+    public class UploadResponse
+    {
+        public string Message { get; set; } = "";
+        public int TotalRows { get; set; }
+        public int SuccessCount { get; set; }
+        public int ErrorCount { get; set; }
+        public List<string> Errors { get; set; } = new();
+    }
+
+    public class ErrorResponse
+    {
+        public string Message { get; set; } = "";
+        public string? Error { get; set; }
     }
 }
