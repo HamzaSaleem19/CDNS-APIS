@@ -82,12 +82,21 @@ namespace CDNSBlazorApp.Controllers
                 {
                     var (success, error) = await processRow(worksheet, row);
                     if (success)
-                        successCount++;
+                    {
+                        // Save changes after each row to prevent tracking and concurrency issues
+                        try
+                        {
+                            await _context.SaveChangesAsync();
+                            successCount++;
+                        }
+                        catch (Exception ex)
+                        {
+                            errors.Add($"Row {row}: Failed to save - {ex.Message}");
+                        }
+                    }
                     else if (error != null)
                         errors.Add($"Row {row}: {error}");
                 }
-
-                await _context.SaveChangesAsync();
 
                 return Ok(new
                 {
